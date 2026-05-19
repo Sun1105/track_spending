@@ -1,0 +1,34 @@
+{
+  "name": "savings-plan-app",
+  "version": "1.0.0",
+  "description": "动态存钱计划系统桌面端",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.savingsplan.app",
+    "productName": "动态存钱计划系统",
+    "win": {
+      "target": "portable"
+    },
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "style.css",
+      "script.js",
+      "preload.js"
+    ]
+  }
+}

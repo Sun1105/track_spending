@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>动态存钱计划系统</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">
+      <span>💰</span>
+      <span>存钱计划系统</span>
+    </div>
+    <nav>
+      <ul class="nav-menu">
+        <li class="nav-item active" onclick="showSection('dashboard')">
+          <span>📊</span> <span>控制面板</span>
+        </li>
+        <li class="nav-item" onclick="showSection('budget')">
+          <span>⚖️</span> <span>预算规划</span>
+        </li>
+        <li class="nav-item" onclick="showSection('records')">
+          <span>✍️</span> <span>每日记账</span>
+        </li>
+        <li class="nav-item" onclick="showSection('analysis')">
+          <span>📈</span> <span>数据分析</span>
+        </li>
+        <li class="nav-item" onclick="showSection('warnings')">
+          <span>🔔</span> <span>警示清单</span>
+        </li>
+        <li class="nav-item" onclick="showSection('settings')">
+          <span>⚙️</span> <span>数据管理</span>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <!-- 控制面板 -->
+    <section id="dashboard" class="section active">
+      <h1>控制面板</h1>
+      <p class="hint">实时监控您的财务状态，确保每分钱都在掌控之中。</p>
+      
+      <div class="summary-grid">
+        <div class="summary-card primary">
+          <span>月总收入</span>
+          <strong id="sumIncome">¥0</strong>
+        </div>
+        <div class="summary-card warning">
+          <span>月分流预算</span>
+          <strong id="sumBudget">¥0</strong>
+        </div>
+        <div class="summary-card success">
+          <span>月预计储蓄</span>
+          <strong id="sumSaving">¥0</strong>
+        </div>
+        <div class="summary-card danger">
+          <span>今日剩余可用</span>
+          <strong id="sumTodayLeft">¥0</strong>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
+        <div class="card">
+          <h2>📅 消费统计</h2>
+          <table class="simple-table">
+            <thead>
+              <tr><th>周期</th><th>收入</th><th>储蓄</th><th>消费</th><th>余额</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>今日</td><td id="dIncome">¥0</td><td id="dSaving">¥0</td><td id="dExpense">¥0</td><td id="dLeft">¥0</td></tr>
+              <tr><td>本周</td><td id="wIncome">¥0</td><td id="wSaving">¥0</td><td id="wExpense">¥0</td><td id="wLeft">¥0</td></tr>
+              <tr><td>本月</td><td id="mIncome">¥0</td><td id="mSaving">¥0</td><td id="mExpense">¥0</td><td id="mLeft">¥0</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>💹 资金分流图表</h2>
+          <div class="chart-container">
+            <canvas id="poolChart" width="220" height="220"></canvas>
+            <div id="poolLegend" class="legend-grid"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 预算规划 -->
+    <section id="budget" class="section">
+      <h1>预算规划</h1>
+      <p class="hint">设定您的收入来源、资金池和每笔开支的上限。</p>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>💵 收入来源</h2>
+            <p class="hint">工资、奖金、副业等固定收入。</p>
+          </div>
+          <button class="btn primary" onclick="addIncome()">＋ 添加收入</button>
+        </div>
+        <div id="incomeList" class="rows"></div>
+        <div class="total-line"><span>收入总计</span><strong id="incomeTotal">¥0</strong></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>🏊 资金分流池</h2>
+            <p class="hint">将收入自动分流到不同的用途。</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn gray" onclick="recommendAllocation()">✨ 一键分流</button>
+            <button class="btn primary" onclick="addPool()">＋ 添加资金池</button>
+          </div>
+        </div>
+        <div id="poolList" class="rows"></div>
+        <div class="total-line">
+          <span>分流总计</span>
+          <div style="text-align: right;">
+            <strong id="poolTotal">¥0</strong>
+            <div id="budgetWarning" class="warning-text" style="display: none; font-size: 12px; margin-top: 4px;">⚠️ 收入与分流总计不一致</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>📊 消费限额配置</h2>
+            <p class="hint">为每一餐、每一天设定最高预算。</p>
+          </div>
+          <button class="btn success" onclick="addLimit()">＋ 添加限额</button>
+        </div>
+        <div class="limit-table-header">
+          <span>限额名称</span>
+          <span>适用时间</span>
+          <span>所属分类</span>
+          <span>每日金额</span>
+          <span>操作</span>
+        </div>
+        <div id="limitList" class="rows"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>🔌 固定扣费</h2>
+            <p class="hint">订阅、房租、保险等每月必扣款项。</p>
+          </div>
+          <button class="btn primary" onclick="addFixed()">＋ 添加扣费</button>
+        </div>
+        <div id="fixedList" class="rows"></div>
+        <div class="total-line"><span>扣费总计</span><strong id="fixedTotal">¥0</strong></div>
+      </div>
+    </section>
+
+    <!-- 每日记账 -->
+    <section id="records" class="section">
+      <h1>每日记账</h1>
+      <p class="hint">记录每一笔收入与支出，保持账目清晰。</p>
+
+      <div class="summary-card primary" style="margin-bottom: 24px; padding: 16px; border-left: 6px solid var(--primary);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div>
+            <span style="margin-bottom: 4px; display: block; font-size: 14px; font-weight: 600;">当前每日可用总限额</span>
+            <small id="dailyLimitSource" style="color: var(--text-muted); font-size: 12px;"></small>
+          </div>
+          <strong id="currentDailyLimit" style="font-size: 24px;">¥0</strong>
+        </div>
+        <div id="categoryLimitsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; border-top: 1px dashed var(--border); padding-top: 12px;">
+          <!-- 动态生成分类限额 -->
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>📝 收支记录</h2>
+          <button class="btn success" onclick="addLog()">＋ 记一笔</button>
+        </div>
+        <div class="log-table-header">
+          <span>📅 日期</span>
+          <span>🏷️ 类型</span>
+          <span>👤 对象</span>
+          <span>🗂️ 种类</span>
+          <span>📝 备注 / 内容</span>
+          <span style="text-align: right; padding-right: 12px;">💰 金额</span>
+          <span>⚙️</span>
+        </div>
+        <div id="logList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>🔍 历史回顾</h2>
+          <div style="display: flex; gap: 8px;">
+            <input id="historyDate" type="date" onchange="renderHistory()" style="width: auto;" />
+            <button class="btn gray" onclick="changeHistoryDate(-1)">◀</button>
+            <button class="btn gray" onclick="changeHistoryDate(1)">▶</button>
+            <button class="btn success" onclick="exportSelectedDay()">导出</button>
+          </div>
+        </div>
+        <div id="historyList" class="rows"></div>
+      </div>
+    </section>
+
+    <!-- 数据分析 -->
+    <section id="analysis" class="section">
+      <div class="header-with-actions">
+        <div>
+          <h1>数据分析</h1>
+          <p class="hint">全方位洞察您的财务健康状况与消费习惯。</p>
+        </div>
+        <div class="period-selector">
+          <button class="btn small active" onclick="updateAnalysisPeriod('month')">本月</button>
+          <button class="btn small" onclick="updateAnalysisPeriod('year')">本年</button>
+        </div>
+      </div>
+      
+      <!-- 核心指标 -->
+      <div class="analysis-summary-grid">
+        <div class="stat-card">
+          <div class="stat-icon income">💰</div>
+          <div class="stat-info">
+            <label>总收入</label>
+            <strong id="analysisTotalIncome">¥0</strong>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon expense">💸</div>
+          <div class="stat-info">
+            <label>总支出</label>
+            <strong id="analysisTotalExpense">¥0</strong>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon saving">🏦</div>
+          <div class="stat-info">
+            <label>储蓄率</label>
+            <strong id="analysisSavingRate">0%</strong>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon balance">⚖️</div>
+          <div class="stat-info">
+            <label>净余</label>
+            <strong id="analysisNetBalance">¥0</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="analysis-main-grid">
+        <!-- 趋势图表 -->
+        <div class="card chart-card">
+          <div class="card-header">
+            <h2>📈 消费趋势</h2>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="analysisTrendChart"></canvas>
+          </div>
+        </div>
+
+        <!-- 分类占比 -->
+        <div class="card chart-card">
+          <div class="card-header">
+            <h2>🍰 支出构成</h2>
+          </div>
+          <div class="chart-wrapper pie-wrapper">
+            <canvas id="analysisCategoryChart"></canvas>
+            <div id="categoryLegend" class="custom-legend"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="analysis-bottom-grid">
+        <!-- 预算进度 -->
+        <div class="card">
+          <h2>🎯 预算执行进度</h2>
+          <div id="budgetProgressList" class="progress-list">
+            <!-- 动态生成 -->
+          </div>
+        </div>
+
+        <!-- 财务建议 -->
+        <div class="card insight-card">
+          <h2>💡 财务智能洞察</h2>
+          <div id="financialInsights" class="insight-list">
+            <!-- 动态生成 -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 警示清单 -->
+    <section id="warnings" class="section">
+      <h1>警示清单</h1>
+      <p class="hint">每日自省，养成良好的财务习惯。</p>
+      <div class="card">
+        <div class="total-line" style="margin-bottom: 20px;">
+          <span>今日确认进度</span>
+          <strong><span id="warningDone">0</span> / <span id="warningTotal">0</span> (<span id="warningRate">0%</span>)</strong>
+        </div>
+        <div id="warningList"></div>
+        <div style="display: grid; grid-template-columns: 1fr 120px auto; gap: 12px; margin-top: 24px;">
+          <input id="warningText" placeholder="添加新提醒..." />
+          <select id="warningPriority">
+            <option value="high">高优先级</option>
+            <option value="mid" selected>中优先级</option>
+            <option value="low">低优先级</option>
+          </select>
+          <button class="btn success" onclick="addWarning()">＋ 添加</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 数据管理 -->
+    <section id="settings" class="section">
+      <h1>数据管理</h1>
+      <p class="hint">配置数据存储位置，管理您的记账文件。</p>
+      
+      <!-- 目录配置 -->
+      <div class="card" style="margin-bottom: 24px;">
+        <h2>📂 数据存储目录</h2>
+        <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px;">
+          <input id="dataDirectoryPath" type="text" readonly placeholder="未选择目录" style="flex: 1; background: #f3f4f6;" />
+          <button class="btn gray" onclick="selectDataDirectory()">选择目录</button>
+        </div>
+        <p class="hint">选择一个文件夹来保存您的 JSON 数据文件。系统会自动读取该文件夹下的所有 .json 文件。</p>
+      </div>
+
+      <!-- 文件管理 -->
+      <div class="card" style="margin-bottom: 24px;">
+        <h2>📄 记账文件列表</h2>
+        <div id="fileList" class="file-list" style="margin-bottom: 16px;">
+          <!-- 动态加载文件列表 -->
+          <p class="hint">请先选择数据目录</p>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <input id="newFileName" type="text" placeholder="新文件名 (例如: 2024-05)" style="flex: 1;" />
+          <button class="btn success" onclick="createNewFile()">＋ 新建文件</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🔧 系统操作</h2>
+        <div style="display: flex; gap: 12px;">
+          <button class="btn gray" onclick="exportData()">💾 导出备份 (本地浏览器)</button>
+          <button class="btn gray" onclick="document.getElementById('importFile').click()">📂 导入数据</button>
+          <button class="btn danger-text" onclick="resetData()">⚠️ 恢复默认</button>
+          <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)" />
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+  <datalist id="categorySuggestions">
+    <option value="饮食类">
+    <option value="交通类"">
+    <option value="房租水电">
+    <option value="购物类"">
+    <option value="休闲类"">
+    <option value="医疗类"">
+    <option value="物品倒卖">
+    <option value="居家生活">
+    <option value="工资奖金">
+    <option value="理财收益">
+  </datalist>
+</body>
+</html>

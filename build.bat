@@ -1,0 +1,3 @@
+@echo off
+echo Building Savings Plan App...
+npm install && npm run build
