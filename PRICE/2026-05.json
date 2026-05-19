@@ -1,0 +1,167 @@
+{
+  "incomes": [
+    {
+      "id": "ee2d8da9-9cae-484a-bcab-f14337140215",
+      "name": "男方工资",
+      "amount": 350000
+    },
+    {
+      "id": "f6908615-d3a8-4ef8-93df-0fe2b47baddc",
+      "name": "女方工资",
+      "amount": 400000
+    }
+  ],
+  "pools": [
+    {
+      "id": "bc767865-9bce-4be6-9207-ff3cf09badc8",
+      "name": "第一层：共同生活",
+      "type": "common",
+      "amount": 350000
+    },
+    {
+      "id": "4a288a56-4535-450b-8bf4-4e4fccb8524a",
+      "name": "第二层：个人生活",
+      "type": "personal",
+      "amount": 150000
+    },
+    {
+      "id": "80970875-898c-4a94-928e-52be9902e022",
+      "name": "第三层：家庭缓冲",
+      "type": "saving",
+      "amount": 100000
+    },
+    {
+      "id": "45457b1f-9357-4efd-b005-cf44fd36537f",
+      "name": "第四层：长期存钱",
+      "type": "saving",
+      "amount": 150000
+    }
+  ],
+  "limits": [
+    {
+      "id": "db03478a-8b32-42c2-854f-d7943e07a2d2",
+      "name": "月度饮食",
+      "cycle": "month",
+      "amount": 60000,
+      "dayType": "all",
+      "category": "饮食类"
+    },
+    {
+      "id": "a2c5d723-330e-4f97-81b0-b7a30ec4b34a",
+      "name": "月度自由",
+      "cycle": "month",
+      "amount": 40000,
+      "dayType": "all",
+      "category": "自由类"
+    }
+  ],
+  "fixed": [
+    {
+      "id": "b5854202-7bc9-4f03-9ada-5bc7403010e0",
+      "name": "男方手机",
+      "owner": "男方",
+      "amount": 4000,
+      "status": "保留"
+    },
+    {
+      "id": "449b54cc-af70-4f85-8088-396ee4f90376",
+      "name": "男方ChatGPT",
+      "owner": "男方",
+      "amount": 3000,
+      "status": "保留"
+    },
+    {
+      "id": "f9fbe1ae-d549-4089-bec7-c83e1e867ccb",
+      "name": "彩票",
+      "owner": "男方",
+      "amount": 1200,
+      "status": "考虑取消"
+    },
+    {
+      "id": "15ddca61-9775-46c5-8e96-a722e20b1635",
+      "name": "Amazon会员",
+      "owner": "男方",
+      "amount": 500,
+      "status": "检查"
+    },
+    {
+      "id": "963f8fe0-24d1-4ec9-8be1-408d7f98c857",
+      "name": "Netflix",
+      "owner": "男方",
+      "amount": 500,
+      "status": "检查"
+    },
+    {
+      "id": "7a30b1fe-0834-4ab4-b007-e9974efd5264",
+      "name": "女方手机",
+      "owner": "女方",
+      "amount": 4000,
+      "status": "保留"
+    },
+    {
+      "id": "1defd3e5-a6bf-440a-9ea2-e2b87e3d6993",
+      "name": "女方ChatGPT",
+      "owner": "女方",
+      "amount": 3000,
+      "status": "保留"
+    }
+  ],
+  "logs": [
+    {
+      "id": "a8372eed-f070-44de-ad77-4866c60ee0f1",
+      "date": "2026-05-15",
+      "type": "expense",
+      "person": "共同",
+      "category": "饮食类",
+      "note": "晚餐",
+      "amount": 120
+    },
+    {
+      "id": "9297e313-ae41-48d2-a0c5-9bccb5be44dd",
+      "date": "2026-05-18",
+      "type": "expense",
+      "person": "男方",
+      "category": "自由类",
+      "note": "购买图书",
+      "amount": 350
+    }
+  ],
+  "warnings": [
+    {
+      "id": "807baa52-28de-44e9-bd88-94602ac64d59",
+      "text": "今天所有花销必须先记录，再付款。",
+      "priority": "high",
+      "done": false
+    },
+    {
+      "id": "4d36f487-0324-43d2-9c53-361e108613a4",
+      "text": "每一餐都不能超过限定额度。",
+      "priority": "high",
+      "done": false
+    },
+    {
+      "id": "ecd7c5f3-2ce8-4784-b354-ee9f5c60cf10",
+      "text": "便利店、咖啡、外卖属于最容易失控的小额消费。",
+      "priority": "high",
+      "done": false
+    },
+    {
+      "id": "91f845c8-3c59-4139-9c31-fa8ba4fc2d65",
+      "text": "个人账户原则上不追加，花完就停止。",
+      "priority": "high",
+      "done": false
+    },
+    {
+      "id": "256fb7ad-048c-4c9f-88b7-8f06a42e6b06",
+      "text": "购物前等待10分钟，确认是否真的必要。",
+      "priority": "mid",
+      "done": false
+    },
+    {
+      "id": "9509e44e-fc39-44a7-aa2d-a57d7e2c5a02",
+      "text": "今天是否珍惜了每一分钱？",
+      "priority": "mid",
+      "done": false
+    }
+  ]
+}

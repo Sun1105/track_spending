@@ -21,17 +21,8 @@ const defaultData = {
     { id: id(), name: "第四层：长期存钱", type: "saving", amount: 150000 }
   ],
   limits: [
-    { id: id(), name: "平日饮食", cycle: "day", amount: 2000, dayType: "weekday", category: "饮食类" },
-    { id: id(), name: "假日饮食", cycle: "day", amount: 5000, dayType: "weekend", category: "饮食类" },
-    { id: id(), name: "交通出行", cycle: "day", amount: 500, dayType: "all", category: "交通出行" },
-    { id: id(), name: "平日购物", cycle: "day", amount: 1000, dayType: "weekday", category: "普通购物消费" },
-    { id: id(), name: "假日购物", cycle: "day", amount: 3000, dayType: "weekend", category: "普通购物消费" },
-    { id: id(), name: "房租水电", cycle: "day", amount: 5000, dayType: "all", category: "房租水电" },
-    { id: id(), name: "物品倒卖限额", cycle: "day", amount: 10000, dayType: "all", category: "物品倒卖" },
-    { id: id(), name: "平日娱乐", cycle: "day", amount: 500, dayType: "weekday", category: "娱乐消费" },
-    { id: id(), name: "假日娱乐", cycle: "day", amount: 5000, dayType: "weekend", category: "娱乐消费" },
-    { id: id(), name: "医疗健康", cycle: "day", amount: 1000, dayType: "all", category: "医疗健康" },
-    { id: id(), name: "教育培训", cycle: "day", amount: 2000, dayType: "all", category: "教育培训" }
+    { id: id(), name: "月度饮食", cycle: "month", amount: 60000, dayType: "all", category: "饮食类" },
+    { id: id(), name: "月度自由", cycle: "month", amount: 40000, dayType: "all", category: "自由类" }
   ],
   fixed: [
     { id: id(), name: "男方手机", owner: "男方", amount: 4000, status: "保留" },
@@ -43,7 +34,8 @@ const defaultData = {
     { id: id(), name: "女方ChatGPT", owner: "女方", amount: 3000, status: "保留" }
   ],
   logs: [
-    { id: id(), date: todayISO(), type: "expense", person: "共同", category: "晚餐", amount: 0 }
+    { id: id(), date: "2026-05-15", type: "expense", person: "共同", category: "饮食类", note: "晚餐", amount: 120 },
+    { id: id(), date: "2026-05-18", type: "expense", person: "男方", category: "自由类", note: "购买图书", amount: 350 }
   ],
   warnings: [
     { id: id(), text: "今天所有花销必须先记录，再付款。", priority: "high", done: false },
@@ -173,11 +165,24 @@ function saveConfig() {
 
 // Override existing saveData
 async function saveData() {
+  let success = false;
   if (config.dataDirectory && config.currentFile) {
     const filePath = `${config.dataDirectory}/${config.currentFile}`;
-    await window.electronAPI.writeFile(filePath, data);
+    success = await window.electronAPI.writeFile(filePath, data);
   } else {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    success = true;
+  }
+
+  if (success) {
+    const statusEl = document.getElementById('saveStatus');
+    if (statusEl) {
+      statusEl.style.display = 'block';
+      clearTimeout(window.saveStatusTimeout);
+      window.saveStatusTimeout = setTimeout(() => {
+        statusEl.style.display = 'none';
+      }, 2000);
+    }
   }
 }
 
@@ -272,17 +277,13 @@ function renderAnalysis() {
   renderFinancialInsights(stats, filteredLogs);
 }
 
+// Charts instances
+let trendChart = null;
+let categoryChart = null;
+
 function drawAnalysisTrendChart(logs) {
   const canvas = document.getElementById("analysisTrendChart");
   if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-  canvas.style.width = rect.width + "px";
-  canvas.style.height = rect.height + "px";
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   const now = new Date();
   let labels = [];
@@ -292,7 +293,7 @@ function drawAnalysisTrendChart(logs) {
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     for (let i = 1; i <= daysInMonth; i++) {
       const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-      labels.push(String(i));
+      labels.push(i + "日");
       values.push(totalByType(logs.filter(x => x.date === dateStr), "expense"));
     }
   } else {
@@ -303,54 +304,42 @@ function drawAnalysisTrendChart(logs) {
     }
   }
 
-  const max = Math.max(...values, 1000);
-  const padding = 40;
-  const w = rect.width - padding * 2;
-  const h = rect.height - padding * 2;
+  if (trendChart) trendChart.destroy();
 
-  ctx.clearRect(0, 0, rect.width, rect.height);
-  
-  // Grid lines
-  ctx.strokeStyle = "#f1f5f9";
-  ctx.lineWidth = 1;
-  for (let i = 0; i <= 4; i++) {
-    const y = padding + (i / 4) * h;
-    ctx.beginPath();
-    ctx.moveTo(padding, y);
-    ctx.lineTo(rect.width - padding, y);
-    ctx.stroke();
-  }
-
-  // Draw line
-  const gradient = ctx.createLinearGradient(0, 0, 0, rect.height);
-  gradient.addColorStop(0, 'rgba(79, 70, 229, 0.2)');
-  gradient.addColorStop(1, 'rgba(79, 70, 229, 0)');
-
-  ctx.strokeStyle = "#4f46e5";
-  ctx.lineWidth = 3;
-  ctx.lineJoin = "round";
-  ctx.beginPath();
-  values.forEach((val, i) => {
-    const x = padding + (i / (labels.length - 1)) * w;
-    const y = rect.height - padding - (val / max) * h;
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-
-  // Area fill
-  ctx.lineTo(rect.width - padding, rect.height - padding);
-  ctx.lineTo(padding, rect.height - padding);
-  ctx.fillStyle = gradient;
-  ctx.fill();
-
-  // X Labels
-  ctx.fillStyle = "#94a3b8";
-  ctx.font = "10px sans-serif";
-  ctx.textAlign = "center";
-  labels.forEach((label, i) => {
-    if (labels.length > 12 && i % 5 !== 0 && i !== labels.length - 1) return;
-    const x = padding + (i / (labels.length - 1)) * w;
-    ctx.fillText(label, x, rect.height - padding + 20);
+  trendChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: '支出金额',
+        data: values,
+        borderColor: '#4f46e5',
+        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointRadius: labels.length > 15 ? 0 : 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1e293b',
+          padding: 12,
+          callbacks: {
+            label: (context) => ` 支出: ¥${context.parsed.y.toLocaleString()}`
+          }
+        }
+      },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { callback: v => '¥' + v } },
+        x: { grid: { display: false } }
+      }
+    }
   });
 }
 
@@ -366,44 +355,38 @@ function drawCategoryChart(logs) {
     categories[cat] = (categories[cat] || 0) + log.amount;
   });
 
-  const sortedCats = Object.entries(categories).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const sortedCats = Object.entries(categories).sort((a, b) => b[1] - a[1]).slice(0, 6);
   const totalExpense = expenseLogs.reduce((s, x) => s + x.amount, 0);
 
-  const colors = ["#4f46e5", "#10b981", "#f59e0b", "#3b82f6", "#f43f5e", "#8b5cf6"];
-  const ctx = canvas.getContext("2d");
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = 200 * dpr;
-  canvas.height = 200 * dpr;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (categoryChart) categoryChart.destroy();
 
-  ctx.clearRect(0, 0, 200, 200);
-  let start = -Math.PI / 2;
-  
   if (totalExpense === 0) {
-    ctx.fillStyle = "#f1f5f9";
-    ctx.beginPath();
-    ctx.arc(100, 100, 80, 0, Math.PI * 2);
-    ctx.fill();
-    legend.innerHTML = "<div class='hint'>暂无支出数据</div>";
+    legend.innerHTML = "<div class='hint' style='text-align:center;padding:20px;'>暂无支出数据</div>";
     return;
   }
 
-  sortedCats.forEach((cat, i) => {
-    const angle = (cat[1] / totalExpense) * Math.PI * 2;
-    ctx.fillStyle = colors[i % colors.length];
-    ctx.beginPath();
-    ctx.moveTo(100, 100);
-    ctx.arc(100, 100, 80, start, start + angle);
-    ctx.closePath();
-    ctx.fill();
-    start += angle;
+  const colors = ["#4f46e5", "#10b981", "#f59e0b", "#3b82f6", "#f43f5e", "#8b5cf6"];
+  
+  categoryChart = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: sortedCats.map(c => c[0]),
+      datasets: [{
+        data: sortedCats.map(c => c[1]),
+        backgroundColor: colors,
+        borderWidth: 0,
+        hoverOffset: 10
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '70%',
+      plugins: {
+        legend: { display: false }
+      }
+    }
   });
-
-  // Inner circle for donut chart
-  ctx.fillStyle = "white";
-  ctx.beginPath();
-  ctx.arc(100, 100, 50, 0, Math.PI * 2);
-  ctx.fill();
 
   legend.innerHTML = sortedCats.map((cat, i) => `
     <div class="legend-item-pie">
@@ -421,12 +404,21 @@ function renderBudgetProgress(currentExpense) {
   if (!list) return;
 
   const monthBudget = sum(data.pools.filter(x => x.type !== 'saving'));
-  const dayBudget = getEffectiveDailyLimit().total;
+  const limitInfo = getEffectiveMonthlyLimit();
+  const monthLimitTotal = limitInfo.total;
   
   const items = [
-    { label: "本月总预算", current: currentExpense, total: monthBudget },
-    { label: "今日可用限额", current: currentExpense / (new Date().getDate() || 1), total: dayBudget }
+    { label: "月度分流预算", current: currentExpense, total: monthBudget },
+    { label: "消费限额总计", current: currentExpense, total: monthLimitTotal }
   ];
+
+  // 添加分类进度
+  Object.entries(limitInfo.categories).forEach(([cat, limit]) => {
+    const spent = data.logs
+      .filter(x => x.type === 'expense' && x.category === cat && x.date.startsWith(todayISO().slice(0, 7)))
+      .reduce((s, x) => s + x.amount, 0);
+    items.push({ label: `${cat} 进度`, current: spent, total: limit });
+  });
 
   list.innerHTML = items.map(item => {
     const rate = Math.min(100, (item.current / item.total * 100) || 0);
@@ -455,54 +447,70 @@ function renderFinancialInsights(stats, logs) {
   const savingRate = stats.income > 0 ? (stats.saving / stats.income * 100) : 0;
   if (savingRate < 20) {
     insights.push({ icon: "📉", text: `当前储蓄率仅为 ${Math.round(savingRate)}%，建议增加“储蓄类”资金池的比例，目标设为 30% 以上。` });
+  } else if (savingRate >= 30) {
+    insights.push({ icon: "🌟", text: `储蓄率达到 ${Math.round(savingRate)}%，表现优异！可以考虑进行一些稳健的长期理财。` });
   } else {
-    insights.push({ icon: "🌟", text: "储蓄习惯良好，请继续保持！可以考虑将闲置资金投入长期存钱计划。" });
+    insights.push({ icon: "👍", text: "储蓄习惯良好，请继续保持！" });
   }
 
-  // 消费建议
-  const expenseRatio = stats.income > 0 ? (stats.expense / stats.income * 100) : 0;
-  if (expenseRatio > 80) {
-    insights.push({ icon: "⚠️", text: "支出占收入比重过高（超过80%），财务风险较大。请检查“支出构成”图表，寻找可削减的开支。" });
+  // 消费压力测试
+  const limitTotal = getEffectiveMonthlyLimit().total;
+  if (stats.expense > limitTotal) {
+    insights.push({ icon: "🚨", text: `本期总支出已超出设定的限额 ${yen(stats.expense - limitTotal)}。请务必检查不必要的消费。` });
+  }
+
+  // 消费趋势
+  if (logs.length >= 2) {
+    const sortedLogs = [...logs].sort((a, b) => a.date.localeCompare(b.date));
+    const midPoint = Math.floor(sortedLogs.length / 2);
+    const firstHalf = totalByType(sortedLogs.slice(0, midPoint), 'expense');
+    const secondHalf = totalByType(sortedLogs.slice(midPoint), 'expense');
+    if (secondHalf > firstHalf * 1.2) {
+      insights.push({ icon: "📈", text: "近期支出有明显上升趋势，请留意是否有冲动消费的情况。" });
+    }
   }
 
   // 分类洞察
   const categories = {};
   logs.filter(x => x.type === 'expense').forEach(log => {
-    categories[log.category] = (categories[log.category] || 0) + log.amount;
+    const cat = log.category || "未分类";
+    categories[cat] = (categories[cat] || 0) + log.amount;
   });
   const topCat = Object.entries(categories).sort((a, b) => b[1] - a[1])[0];
   if (topCat) {
-    insights.push({ icon: "🔍", text: `“${topCat[0]}”是您最大的开销项，共支出 ${yen(topCat[1])}。看看是否有平价替代方案？` });
+    insights.push({ icon: "🔍", text: `“${topCat[0]}”是您最大的开销项 (${yen(topCat[1])})，约占总支出的 ${Math.round(topCat[1] / stats.expense * 100)}%。` });
   }
 
-  // 结余建议
-  if (stats.income - stats.expense < 0) {
-    insights.push({ icon: "🚨", text: "本期入不敷出！请务必严格执行每日限额，并检查是否有不必要的固定扣费可以取消。" });
-  }
-
-  list.innerHTML = insights.slice(0, 3).map(item => `
-    <div class="insight-item">
-      <div class="insight-icon">${item.icon}</div>
-      <div class="insight-text">${item.text}</div>
-    </div>
-  `).join("");
+  list.innerHTML = insights.length > 0 
+    ? insights.slice(0, 3).map(item => `
+        <div class="insight-item">
+          <div class="insight-icon">${item.icon}</div>
+          <div class="insight-text">${item.text}</div>
+        </div>
+      `).join("")
+    : "<div class='hint' style='text-align:center;padding:20px;'>积累更多数据以获得智能洞察</div>";
 }
 
 function renderIncomes(){
   const list = document.getElementById("incomeList");
-  if(!list) return;
-  list.innerHTML = data.incomes.map(x => `
+  const dashboardList = document.getElementById("dashboardIncomeList");
+  
+  const html = data.incomes.map(x => `
     <div class="row income-row">
       <input value="${esc(x.name)}" onchange="updateItem('incomes','${x.id}','name',this.value)" />
       <input type="number" min="0" value="${x.amount}" onchange="updateItem('incomes','${x.id}','amount',this.value)" />
       <button class="btn danger-text small" onclick="deleteItem('incomes','${x.id}')">删除</button>
     </div>`).join("");
+    
+  if(list) list.innerHTML = html;
+  if(dashboardList) dashboardList.innerHTML = html;
 }
 
 function renderPools(){
   const list = document.getElementById("poolList");
-  if(!list) return;
-  list.innerHTML = data.pools.map(x => `
+  const dashboardList = document.getElementById("dashboardPoolList");
+  
+  const html = data.pools.map(x => `
     <div class="row pool-row">
       <input value="${esc(x.name)}" onchange="updateItem('pools','${x.id}','name',this.value)" />
       <select onchange="updateItem('pools','${x.id}','type',this.value)">
@@ -514,6 +522,9 @@ function renderPools(){
       <input type="number" min="0" value="${x.amount}" onchange="updateItem('pools','${x.id}','amount',this.value)" />
       <button class="btn danger-text small" onclick="deleteItem('pools','${x.id}')">删除</button>
     </div>`).join("");
+    
+  if(list) list.innerHTML = html;
+  if(dashboardList) dashboardList.innerHTML = html;
 }
 
 function renderLimits(){
@@ -568,14 +579,9 @@ function renderLogs(){
   const list = document.getElementById("logList");
   if(!list) return;
   
-  // 定义预设分类 (保持用户要求的顺序)
-  const presetCategories = ["购物类", "日常类", "娱乐类", "医疗类", "交通类", "饮食类"];
-  // 获取用户在限额中自定义的分类（排除预设分类和“其他”）
-  const customCategories = [...new Set(data.limits.map(x => x.category)
-    .filter(cat => cat && !presetCategories.includes(cat) && cat !== "其他" && cat !== "Other")
-  )];
-  // 合并所有分类
-  const allCategories = [...presetCategories, ...customCategories];
+  // 种类下拉框：从消费限额配置中动态获取分类
+  const allCategories = [...new Set(data.limits.map(x => x.category).filter(Boolean))];
+  if (allCategories.length === 0) allCategories.push("饮食类", "自由类");
   
   // 按日期分组
   const groups = {};
@@ -589,8 +595,8 @@ function renderLogs(){
 
   if (sortedDates.length === 0) {
     list.innerHTML = `
-      <div class="hint" style="text-align:center;padding:60px;">
-        <div style="font-size:64px;margin-bottom:24px;">✍️</div>
+      <div class="hint" style="text-align:center;padding:40px;">
+        <div style="font-size:48px;margin-bottom:16px;">✍️</div>
         还没有记录，开始记第一笔账吧！
       </div>`;
     return;
@@ -604,34 +610,31 @@ function renderLogs(){
     return `
       <div class="log-date-group ${isCollapsed ? 'collapsed' : ''}">
         <div class="log-date-header" onclick="toggleDateGroup('${date}')">
-          <div class="date-text">
-            <span class="toggle-icon">▼</span>
-            <span>📅 ${date}</span>
-          </div>
+          <span class="date-text"><span class="toggle-icon">▼</span>📅 ${date}</span>
           <span class="day-total">当日支出: ${yen(dayTotal)}</span>
         </div>
         <div class="rows">
           ${logs.map(x => `
-            <div class="log-row log-row-grid type-${x.type}">
-              <input type="date" value="${x.date}" onchange="updateItem('logs','${x.id}','date',this.value)" style="font-size: 12px; color: var(--text-muted);" />
-              <select onchange="updateItem('logs','${x.id}','type',this.value)" style="font-weight: 700;">
+            <div class="row log-row type-${x.type}">
+              <input type="date" value="${x.date}" onchange="updateItem('logs','${x.id}','date',this.value)" style="padding: 10px 4px; font-size: 12px;" />
+              <select onchange="updateItem('logs','${x.id}','type',this.value)" style="padding: 10px 4px; font-weight: 700;">
                 <option value="expense" ${x.type==='expense'?'selected':''}>💸 消费</option>
                 <option value="income" ${x.type==='income'?'selected':''}>💰 收入</option>
                 <option value="saving" ${x.type==='saving'?'selected':''}>🏦 储蓄</option>
               </select>
-              <select onchange="updateItem('logs','${x.id}','person',this.value)">
+              <select onchange="updateItem('logs','${x.id}','person',this.value)" style="padding: 10px 4px;">
                 <option value="共同" ${x.person==='共同'?'selected':''}>👥 共同</option>
                 <option value="男方" ${x.person==='男方'?'selected':''}>👨 男方</option>
                 <option value="女方" ${x.person==='女方'?'selected':''}>👩 女方</option>
               </select>
-              <select onchange="updateItem('logs','${x.id}','category',this.value)">
-                <option value="" ${!x.category ? 'selected' : ''}>🏷️ 种类</option>
+              <select onchange="updateItem('logs','${x.id}','category',this.value)" style="padding: 10px 4px;">
+                <option value="" ${!x.category ? 'selected' : ''}>🏷️ 选择种类</option>
                 ${allCategories.map(cat => `<option value="${cat}" ${x.category === cat ? 'selected' : ''}>${cat}</option>`).join("")}
                 <option value="其他" ${x.category === 'Other' || x.category === '其他' ? 'selected' : ''}>其他</option>
               </select>
               <input value="${esc(x.note || '')}" placeholder="📝 备注 (地点、内容等)" onchange="updateItem('logs','${x.id}','note',this.value)" />
               <input type="number" class="amount-input" min="0" value="${x.amount}" onchange="updateItem('logs','${x.id}','amount',this.value)" />
-              <button class="btn danger-text small" onclick="deleteItem('logs','${x.id}')" title="删除">🗑️</button>
+              <button class="btn danger-text small" onclick="deleteItem('logs','${x.id}')">🗑️</button>
             </div>
           `).join("")}
         </div>
@@ -666,58 +669,76 @@ function renderHistory(){
 
   if(!list.length){
     listEl.innerHTML = `
-      <div class="hint" style="text-align:center;padding:40px;">
-        <div style="font-size:48px;margin-bottom:16px;">☕</div>
+      <div class="hint" style="text-align:center;padding:60px;">
+        <div style="font-size:64px;margin-bottom:24px;">☕</div>
         这一天没有记录，是休息日吗？
       </div>`;
     return;
   }
 
-  const dIncome = totalByType(list, "income");
   const dExpense = totalByType(list, "expense");
-  const dSaving = totalByType(list, "saving");
-  const limitInfo = getEffectiveDailyLimit(date);
-  const limitDay = limitInfo.total;
-  const left = limitDay - dExpense;
+  const limitInfo = getEffectiveMonthlyLimit();
+  const limitMonth = limitInfo.total;
+  const limitDayAvg = limitMonth / 30;
+  const left = limitDayAvg - dExpense;
 
   const typeText = { expense:"消费", income:"收入", saving:"储蓄" };
   
   let html = `
     <div class="history-day-group">
-      <div class="history-date-header">
-        <span>📅 ${date} (${limitInfo.dayTypeInfo})</span>
-        <span>${dExpense > limitDay ? '⚠️ 已超额' : '✅ 正常'}</span>
-      </div>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin-bottom: 20px;">
-        <div class="summary-card" style="padding: 12px; border-radius: 12px;">
-          <span style="font-size: 11px;">总支出</span>
-          <strong style="font-size: 16px;">${yen(dExpense)}</strong>
+      <div class="log-date-header" style="cursor: default; border-radius: 12px 12px 0 0;">
+        <div class="date-text">📅 ${date} 历史详情</div>
+        <div class="day-total" style="color: ${dExpense > limitDayAvg ? 'var(--danger)' : 'var(--primary)'}">
+          ${dExpense > limitDayAvg ? '⚠️ 超额' : '✅ 正常'}
         </div>
-        ${Object.entries(limitInfo.categories).map(([cat, limit]) => {
-          const spent = list.filter(x => x.category === cat && x.type === 'expense').reduce((s, x) => s + x.amount, 0);
-          const cLeft = limit - spent;
-          return `
-            <div class="summary-card" style="padding: 12px; border-radius: 12px; border-top: 3px solid ${cLeft < 0 ? 'var(--danger)' : 'var(--success)'}">
-              <span style="font-size: 11px;">${cat}剩余</span>
-              <strong style="font-size: 16px; color: ${cLeft < 0 ? 'var(--danger)' : 'var(--text-main)'}">${yen(cLeft)}</strong>
-            </div>
-          `;
-        }).join("")}
       </div>
-      <div class="rows">
-         ${list.map(x => `
-          <div class="row history-row" style="background: white; border: 1px solid var(--border);">
-            <div class="type-${x.type}" style="font-weight:700; color: ${x.type==='expense'?'var(--danger)':'var(--success)'}">${typeText[x.type] || x.type}</div>
-            <div>${esc(x.person || "共同")}</div>
-            <div style="flex:1">
-              <span class="history-category">${esc(x.category || "未分类")}</span>
-              <span class="history-note">${x.note ? ' - ' + esc(x.note) : ''}</span>
-            </div>
-            <div style="text-align:right;font-weight:800;color:var(--text-main)">${yen(x.amount)}</div>
-            <button class="btn danger-text small" onclick="deleteItem('logs','${x.id}')">删除</button>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; padding: 24px; background: white; border: 1px solid var(--border); border-top: none; border-radius: 0 0 12px 12px; margin-bottom: 24px;">
+        <div class="stat-card" style="box-shadow: none; border: 1px solid #f1f5f9; padding: 16px;">
+          <div class="stat-icon expense" style="width: 40px; height: 40px; font-size: 20px;">💸</div>
+          <div class="stat-info">
+            <label style="font-size: 11px;">当日支出</label>
+            <strong style="font-size: 18px;">${yen(dExpense)}</strong>
           </div>
-        `).join("")}
-       </div>
+        </div>
+        <div class="stat-card" style="box-shadow: none; border: 1px solid #f1f5f9; padding: 16px;">
+          <div class="stat-icon balance" style="width: 40px; height: 40px; font-size: 20px;">📊</div>
+          <div class="stat-info">
+            <label style="font-size: 11px;">日均限额</label>
+            <strong style="font-size: 18px;">${yen(limitDayAvg)}</strong>
+          </div>
+        </div>
+        <div class="stat-card" style="box-shadow: none; border: 1px solid #f1f5f9; padding: 16px;">
+          <div class="stat-icon ${left < 0 ? 'expense' : 'income'}" style="width: 40px; height: 40px; font-size: 20px;">⚖️</div>
+          <div class="stat-info">
+            <label style="font-size: 11px;">当日差值</label>
+            <strong style="font-size: 18px; color: ${left < 0 ? 'var(--danger)' : 'var(--success)'}">${yen(left)}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="log-table-header" style="background: #f8fafc; border-radius: 0;">
+          <span>🏷️ 类型</span>
+          <span>👤 对象</span>
+          <span>🗂️ 种类</span>
+          <span>📝 备注</span>
+          <span style="text-align: right;">💰 金额</span>
+          <span></span>
+        </div>
+        <div class="rows" style="gap: 0;">
+          ${list.map(x => `
+            <div class="log-row" style="grid-template-columns: 90px 100px 120px 1fr 100px 40px;">
+              <span class="priority-tag" style="background: ${x.type==='expense'?'var(--danger-light)':'var(--success-light)'}; color: ${x.type==='expense'?'var(--danger)':'var(--success)'}; border-radius: 6px;">${typeText[x.type]}</span>
+              <span style="font-weight: 600;">${x.person}</span>
+              <span style="color: var(--text-muted);">${x.category || '未分类'}</span>
+              <span style="font-style: italic; color: var(--text-muted);">${esc(x.note || '-')}</span>
+              <strong style="text-align: right; color: ${x.type==='expense'?'var(--danger)':'var(--success)'}">${yen(x.amount)}</strong>
+              <button class="btn danger-text small" onclick="deleteItem('logs','${x.id}')" style="background: transparent; border: none;">🗑️</button>
+            </div>
+          `).join("")}
+        </div>
+      </div>
     </div>
   `;
   listEl.innerHTML = html;
@@ -770,15 +791,11 @@ function calculate(){
   const fixedTotal = data.fixed.filter(x => x.status !== "已取消").reduce((s,x)=>s+Number(x.amount||0),0);
   const today = todayISO();
   const now = new Date(today);
-  const weekStart = new Date(now); weekStart.setDate(now.getDate() - ((now.getDay()+6)%7));
   const monthPrefix = today.slice(0,7);
-  const yearPrefix = today.slice(0,4);
 
   const ranges = {
     d: x => x.date === today,
-    w: x => new Date(x.date) >= weekStart && new Date(x.date) <= now,
-    m: x => String(x.date).startsWith(monthPrefix),
-    y: x => String(x.date).startsWith(yearPrefix)
+    m: x => String(x.date).startsWith(monthPrefix)
   };
   const report = key => {
     const list = data.logs.filter(ranges[key]);
@@ -789,24 +806,27 @@ function calculate(){
       list: list
     };
   };
-  const d=report("d"), w=report("w"), m=report("m"), y=report("y");
+  const d=report("d"), m=report("m");
   
-  const limitInfo = getEffectiveDailyLimit();
-  const limitDay = limitInfo.total;
-  const limitWeek = limitDay * 7; // 简单估算周限额
-  const todayLeft = Math.max(0, limitDay - d.expense);
-
+  const limitInfo = getEffectiveMonthlyLimit();
+  const limitMonth = limitInfo.total;
+  
   set("sumIncome", yen(incomeTotal));
   set("sumBudget", yen(poolTotal));
   set("sumSaving", yen(savingTotal));
+  set("currentMonthlyLimit", yen(limitMonth));
+  
+  const todayLimit = limitMonth / 30;
+  const todayLeft = todayLimit - d.expense;
   set("sumTodayLeft", yen(todayLeft));
-  set("currentDailyLimit", yen(limitDay));
-  set("dailyLimitSource", `今日为：${limitInfo.dayTypeInfo}`);
+  
+  set("monthlyLimitSource", `本月预算统计`);
   
   const grid = document.getElementById("categoryLimitsGrid");
   if (grid) {
     grid.innerHTML = Object.entries(limitInfo.categories).map(([cat, limit]) => {
-      const spent = d.list.filter(x => x.category === cat && x.type === 'expense').reduce((s, x) => s + x.amount, 0);
+      // 计算本月已用
+      const spent = m.list.filter(x => x.category === cat && x.type === 'expense').reduce((s, x) => s + x.amount, 0);
       const left = limit - spent;
       return `
         <div style="font-size: 13px;">
@@ -821,20 +841,36 @@ function calculate(){
   }
 
   set("incomeTotal", yen(incomeTotal));
+  set("dashboardIncomeTotal", yen(incomeTotal));
   set("poolTotal", yen(poolTotal));
-  set("fixedTotal", yen(fixedTotal));
+  set("dashboardPoolTotal", yen(poolTotal));
+  set("fixedTotal", yen(fixedTotal)); // 确保显示固定扣费总计
 
   const warningEl = document.getElementById("budgetWarning");
   if (warningEl) {
     warningEl.style.display = (incomeTotal === poolTotal) ? "none" : "block";
   }
 
-  setPeriod("d", d, limitDay);
-  setPeriod("w", w, limitWeek);
-  setPeriod("m", m, incomeTotal - savingTotal);
-  // setPeriod("y", y, (incomeTotal - savingTotal) * 12);
+  setPeriod("d", d, limitMonth / 30); // 每日大致参考
+  setPeriod("m", m, limitMonth);
 
   drawChart();
+}
+
+function getEffectiveMonthlyLimit() {
+  const results = {
+    total: 0,
+    categories: {}
+  };
+
+  data.limits.forEach(item => {
+    const amount = Number(item.amount || 0);
+    const cat = item.category || "未分类";
+    results.categories[cat] = (results.categories[cat] || 0) + amount;
+    results.total += amount;
+  });
+
+  return results;
 }
 
 function setPeriod(prefix, r, budget){
@@ -845,37 +881,6 @@ function setPeriod(prefix, r, budget){
 }
 function sum(list){ return list.reduce((s,x)=>s+Number(x.amount||0),0); }
 function totalByType(list,type){ return list.filter(x=>x.type===type).reduce((s,x)=>s+Number(x.amount||0),0); }
-
-function getEffectiveDailyLimit(targetDate = null) {
-  const dateObj = targetDate ? new Date(targetDate) : new Date();
-  const day = dateObj.getDay(); // 0 (Sun) to 6 (Sat)
-  const isWeekend = (day === 0 || day === 6);
-  const currentDayType = isWeekend ? "weekend" : "weekday";
-  
-  // 动态获取当前所有已定义的限额分类
-  const categories = [...new Set(data.limits.map(x => x.category).filter(Boolean))];
-  
-  const results = {
-    total: 0,
-    categories: {},
-    dayTypeInfo: isWeekend ? "假日" : "平日"
-  };
-
-  categories.forEach(cat => {
-    // 寻找匹配当前日期类型和分类的限额
-    const match = data.limits.find(x => 
-      (x.dayType === currentDayType || x.dayType === "all") && 
-      x.category === cat
-    );
-    if (match) {
-      const amount = Number(match.amount || 0);
-      results.categories[cat] = amount;
-      results.total += amount;
-    }
-  });
-
-  return results;
-}
 
 function drawChart(){
   const canvas=document.getElementById("poolChart"), legend=document.getElementById("poolLegend");
@@ -900,11 +905,38 @@ function drawChart(){
 function updateItem(group,id,key,value){
   const item=data[group].find(x=>x.id===id); if(!item) return;
   if(["amount"].includes(key)) item[key]=Math.round(Number(value||0)); else item[key]=value;
-  render();
+  
+  // Targeted rendering for better performance
+  if (group === 'incomes' || group === 'pools') {
+    renderIncomes(); renderPools(); calculate();
+  } else if (group === 'limits') {
+    renderLimits(); calculate();
+  } else if (group === 'fixed') {
+    renderFixed(); calculate();
+  } else if (group === 'logs') {
+    renderLogs(); calculate(); renderHistory();
+  } else if (group === 'warnings') {
+    renderWarnings();
+  }
+
+  // Always save but don't always re-render heavy charts unless in analysis view
+  if (document.getElementById('analysis').classList.contains('active')) {
+    renderAnalysis();
+  }
+  saveData();
 }
-function deleteItem(group,id){ data[group]=data[group].filter(x=>x.id!==id); render(); }
-function addIncome(){ data.incomes.push({id:id(),name:"新收入",amount:0}); render(); }
-function addPool(){ data.pools.push({id:id(),name:"新资金池",type:"common",amount:0}); render(); }
+function deleteItem(group,id){ 
+  data[group]=data[group].filter(x=>x.id!==id); 
+  render(); 
+}
+function addIncome(){ 
+  data.incomes.push({id:id(),name:"新收入",amount:0}); 
+  render(); 
+}
+function addPool(){ 
+  data.pools.push({id:id(),name:"新资金池",type:"common",amount:0}); 
+  render(); 
+}
 
 function recommendAllocation() {
   const incomeTotal = sum(data.incomes);
@@ -946,8 +978,8 @@ function recommendAllocation() {
   render();
 }
 
-function addLimit(){ data.limits.push({id:id(),name:"新限额",dayType:"all",category:"",amount:0}); render(); }
-function addFixed(){ data.fixed.push({id:id(),name:"新固定扣费",owner:"共同",amount:0,status:"检查"}); render(); }
+function addLimit(){ data.limits.push({id:id(),name:"新预算项目",cycle:"month",dayType:"all",category:"自由类",amount:0}); render(); }
+function addFixed(){ data.fixed.push({id:id(),name:"新固定支出",owner:"共同",amount:0,status:"保留"}); render(); }
 function addLog(){ data.logs.unshift({id:id(),date:todayISO(),type:"expense",person:"共同",category:"",note:"",amount:0}); render(); }
 function addWarning(){ const text=document.getElementById("warningText").value.trim(); const priority=document.getElementById("warningPriority").value; if(!text) return; data.warnings.push({id:id(),text,priority,done:false}); document.getElementById("warningText").value=""; render(); }
 function resetWarnings(){ data.warnings=data.warnings.map(x=>({...x,done:false})); render(); }
