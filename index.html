@@ -47,49 +47,21 @@
       <p class="hint">实时监控您的财务状态，确保每分钱都在掌控之中。</p>
       
       <div class="summary-grid">
-        <div class="summary-card primary">
+        <div class="summary-card primary" onclick="showSection('budget')" style="cursor: pointer;">
           <span>月总收入</span>
           <strong id="sumIncome">¥0</strong>
         </div>
-        <div class="summary-card warning">
+        <div class="summary-card warning" onclick="showSection('budget')" style="cursor: pointer;">
           <span>月分流预算</span>
           <strong id="sumBudget">¥0</strong>
         </div>
-        <div class="summary-card success">
+        <div class="summary-card success" onclick="showSection('analysis')" style="cursor: pointer;">
           <span>月预计储蓄</span>
           <strong id="sumSaving">¥0</strong>
         </div>
-        <div class="summary-card danger">
+        <div class="summary-card danger" onclick="showSection('records')" style="cursor: pointer;">
           <span>今日剩余可用</span>
           <strong id="sumTodayLeft">¥0</strong>
-        </div>
-      </div>
-
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 24px;">
-        <!-- 收入快速编辑 -->
-        <div class="card">
-          <div class="card-header">
-            <h2>💵 收入项目</h2>
-            <button class="btn primary small" onclick="addIncome()">＋</button>
-          </div>
-          <div id="dashboardIncomeList" class="rows"></div>
-          <div class="total-line" style="margin-top: 12px; padding: 10px 15px;">
-            <span>合计</span>
-            <strong id="dashboardIncomeTotal">¥0</strong>
-          </div>
-        </div>
-
-        <!-- 分流快速编辑 -->
-        <div class="card">
-          <div class="card-header">
-            <h2>🏊 资金分流</h2>
-            <button class="btn primary small" onclick="addPool()">＋</button>
-          </div>
-          <div id="dashboardPoolList" class="rows"></div>
-          <div class="total-line" style="margin-top: 12px; padding: 10px 15px;">
-            <span>合计</span>
-            <strong id="dashboardPoolTotal">¥0</strong>
-          </div>
         </div>
       </div>
 
@@ -110,9 +82,9 @@
 
         <div class="card">
           <h2>💹 资金分流图表</h2>
-          <div class="chart-container">
-            <canvas id="poolChart" width="220" height="220"></canvas>
-            <div id="poolLegend" class="legend-grid"></div>
+          <div class="chart-wrapper pie-wrapper">
+            <canvas id="poolChart"></canvas>
+            <div id="poolLegend" class="custom-legend"></div>
           </div>
         </div>
       </div>
@@ -215,7 +187,10 @@
       <div class="card">
         <div class="card-header">
           <h2>📝 收支记录</h2>
-          <button class="btn success" onclick="addLog()">＋ 记一笔</button>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <input id="logSearch" placeholder="搜索备注、分类、对象..." oninput="renderLogs()" style="width: 200px; padding: 6px 12px; margin-bottom: 0;" />
+            <button class="btn success" onclick="addLog()">＋ 记一笔</button>
+          </div>
         </div>
         <div class="log-table-header">
           <span>📅 日期</span>
@@ -233,10 +208,11 @@
         <div class="card-header">
           <h2>🔍 历史回顾</h2>
           <div style="display: flex; gap: 8px;">
+            <button class="btn gray small" onclick="setHistoryToday()">今天</button>
             <input id="historyDate" type="date" onchange="renderHistory()" style="width: auto;" />
-            <button class="btn gray" onclick="changeHistoryDate(-1)">◀</button>
-            <button class="btn gray" onclick="changeHistoryDate(1)">▶</button>
-            <button class="btn success" onclick="exportSelectedDay()">导出</button>
+            <button class="btn gray small" onclick="changeHistoryDate(-1)">◀</button>
+            <button class="btn gray small" onclick="changeHistoryDate(1)">▶</button>
+            <button class="btn success small" onclick="exportSelectedDay()">导出</button>
           </div>
         </div>
         <div id="historyList" class="rows"></div>
@@ -335,6 +311,10 @@
       <h1>警示清单</h1>
       <p class="hint">每日自省，养成良好的财务习惯。</p>
       <div class="card">
+        <div class="card-header">
+          <h2>🔔 警示提醒</h2>
+          <button class="btn danger-text small" onclick="clearDoneWarnings()">清除已完成</button>
+        </div>
         <div class="total-line" style="margin-bottom: 20px;">
           <span>今日确认进度</span>
           <strong><span id="warningDone">0</span> / <span id="warningTotal">0</span> (<span id="warningRate">0%</span>)</strong>

@@ -16,13 +16,13 @@
       "id": "d7b56edb-b99d-4e79-a389-6acb9360ca78",
       "name": "第一层：共同生活",
       "type": "common",
-      "amount": 346667
+      "amount": 350000
     },
     {
       "id": "46ea5b39-c942-40fb-bd4e-36ec6856851b",
       "name": "第二层：个人生活",
       "type": "personal",
-      "amount": 173333
+      "amount": 170000
     },
     {
       "id": "2e6b71eb-4ea2-458c-8442-51e50f14a6ce",

@@ -594,6 +594,18 @@ input:focus, select:focus {
 }
 .total-line strong { font-size: 20px; }
 
+.warning-text {
+  color: var(--danger);
+  font-weight: 600;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
 /* Table Styles */
 .simple-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
 .simple-table th { text-align: left; padding: 12px; color: var(--text-muted); font-size: 13px; font-weight: 700; border-bottom: 1px solid var(--border); }
@@ -687,10 +699,24 @@ input:focus, select:focus {
 
 @media (max-width: 768px) {
   body { flex-direction: column; }
-  .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; padding: 12px; }
-  .logo { margin-bottom: 0; margin-right: 20px; }
-  .nav-menu { display: flex; flex-direction: row; }
-  .main-content { padding: 20px; }
+  .sidebar { 
+    width: 100%; 
+    height: auto; 
+    border-right: none; 
+    border-bottom: 1px solid var(--border); 
+    flex-direction: row; 
+    padding: 8px 12px; 
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    overflow-x: auto;
+  }
+  .logo { margin-bottom: 0; margin-right: 16px; font-size: 16px; white-space: nowrap; }
+  .logo span:last-child { display: none; }
+  .nav-menu { display: flex; flex-direction: row; gap: 4px; }
+  .nav-item { padding: 8px 12px; font-size: 13px; white-space: nowrap; }
+  .main-content { padding: 16px; }
+  #saveStatus { position: absolute; bottom: 4px; right: 12px; padding: 0; }
 }
 
 /* File Management */
