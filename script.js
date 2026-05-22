@@ -50,8 +50,8 @@ const defaultData = {
     { id: id(), name: "第四层：长期存钱", type: "saving", amount: 150000 }
   ],
   limits: [
-    { id: id(), name: "每日饮食", cycle: "day", amount: 2000, dayType: "all", category: "饮食类" },
-    { id: id(), name: "每日自由", cycle: "day", amount: 1500, dayType: "all", category: "自由类" }
+    { id: id(), name: "月度饮食", cycle: "month", amount: 60000, dayType: "all", category: "饮食类" },
+    { id: id(), name: "月度自由", cycle: "month", amount: 45000, dayType: "all", category: "自由类" }
   ],
   fixed: [
     { id: id(), name: "男方手机", owner: "男方", amount: 4000, status: "保留" },
@@ -604,12 +604,12 @@ function renderLimits(){
 
   list.innerHTML = data.limits.map(x => `
     <div class="row limit-row">
-      <input value="${esc(x.name)}" onchange="updateItem('limits','${x.id}','name',this.value)" placeholder="限额名称 (如: 平日饮食)" />
+      <input value="${esc(x.name)}" onchange="updateItem('limits','${x.id}','name',this.value)" placeholder="限额名称 (如: 餐饮限额)" />
       <select onchange="updateItem('limits','${x.id}','dayType',this.value)">
         ${Object.entries(dayTypes).map(([k,v]) => `<option value="${k}" ${x.dayType===k?'selected':''}>${v}</option>`).join("")}
       </select>
       <input value="${esc(x.category)}" list="categorySuggestions" onchange="updateItem('limits','${x.id}','category',this.value)" placeholder="所属分类 (如: 饮食类)" />
-      <input type="number" min="0" value="${x.amount}" onchange="updateItem('limits','${x.id}','amount',this.value)" placeholder="金额" />
+      <input type="number" min="0" value="${x.amount}" onchange="updateItem('limits','${x.id}','amount',this.value)" placeholder="每月总金额" />
       <button class="btn danger-text small" onclick="deleteItem('limits','${x.id}')">删除</button>
     </div>`).join("");
 }
@@ -882,12 +882,12 @@ function calculate(){
   weekStart.setDate(diff);
   weekStart.setHours(0,0,0,0);
 
-  // 计算本周预算 (准确累加每天的额度)
-  let limitWeekTotal = 0;
+  // 计算本周静态预算 (用于统计表格)
+  let limitWeekStatic = 0;
   const tempDate = new Date(weekStart);
   for(let i=0; i<7; i++) {
     const dStr = tempDate.toISOString().slice(0,10);
-    limitWeekTotal += getDailyLimitForDate(dStr);
+    limitWeekStatic += getDailyLimitForDate(dStr);
     tempDate.setDate(tempDate.getDate() + 1);
   }
 
@@ -915,20 +915,28 @@ function calculate(){
   const limitInfo = getEffectiveMonthlyLimit();
   const limitMonth = limitInfo.total;
   
-  // 今日可用 = (月限额 - 本月已支出 + 今日支出) / 本月剩余天数
-  const monthSpentExcludingToday = m.expense - d.expense;
-  const todayBudget = Math.max(0, (limitMonth - monthSpentExcludingToday) / daysLeft);
-  const todayLeft = todayBudget - d.expense;
+  // 核心逻辑修正：今日分配预算应考虑“本月到昨天为止的盈余/亏空”
+  // 本月可用总额 = 月限额 + 本月额外收入 - 本月额外储蓄
+  // 本月截止昨日支出 = m.expense - d.expense
+  // 本月截止昨日额外净额 = (m.income - d.income) - (m.saving - d.saving)
+  // 今日分配预算 = (月限额 + 本月截止昨日额外净额 - 本月截止昨日支出) / 本月剩余天数
+  
+  const spentBeforeToday = m.expense - d.expense;
+  const extraBeforeToday = (m.income - d.income) - (m.saving - d.saving);
+  const todayBudget = Math.max(0, (limitMonth + extraBeforeToday - spentBeforeToday) / daysLeft);
+
+  // 当月剩余可用 = (月限额 + 本月总额外收入 - 本月总额外储蓄) - 本月总支出
+  const monthLeft = (limitMonth + m.income - m.saving) - m.expense;
 
   // 更新顶部汇总卡片
   set("sumIncome", yen(incomeTotal));
   set("sumBudget", yen(poolTotal));
   set("sumSaving", yen(savingTotal));
-  set("sumTodayLeft", yen(todayLeft));
+  set("sumMonthLeft", yen(monthLeft));
 
   // 更新控制面板统计表格
   setPeriod("d", d, todayBudget);
-  setPeriod("w", w, limitWeekTotal);
+  setPeriod("w", w, limitWeekStatic);
   setPeriod("m", m, limitMonth);
 
   // 更新预算规划/记账页面的统计
@@ -965,24 +973,14 @@ function calculate(){
 }
 
 function getEffectiveMonthlyLimit() {
-  const stats = getMonthStats();
   const results = {
     total: 0,
     categories: {}
   };
 
   data.limits.forEach(item => {
-    const amount = Number(item.amount || 0);
+    const monthlyAmount = Number(item.amount || 0);
     const cat = item.category || "未分类";
-    let monthlyAmount = 0;
-    
-    if (item.dayType === 'all') {
-      monthlyAmount = amount * stats.daysInMonth;
-    } else if (item.dayType === 'weekday') {
-      monthlyAmount = amount * stats.weekdays;
-    } else if (item.dayType === 'weekend') {
-      monthlyAmount = amount * stats.weekends;
-    }
     
     results.categories[cat] = (results.categories[cat] || 0) + monthlyAmount;
     results.total += monthlyAmount;
@@ -997,27 +995,43 @@ function getEffectiveMonthlyLimit() {
  */
 function getDailyLimitForDate(dateStr) {
   const date = new Date(dateStr);
+  const stats = getMonthStats(dateStr);
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
   const dayTypeMatch = isWeekend ? 'weekend' : 'weekday';
   
   return data.limits
     .filter(item => item.dayType === 'all' || item.dayType === dayTypeMatch)
-    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    .reduce((sum, item) => {
+      const amount = Number(item.amount || 0);
+      if (item.dayType === 'all') return sum + (amount / stats.daysInMonth);
+      if (item.dayType === 'weekday') return sum + (amount / stats.weekdays);
+      if (item.dayType === 'weekend') return sum + (amount / stats.weekends);
+      return sum;
+    }, 0);
 }
 
 function setPeriod(prefix, r, budget){
-  set(prefix+"Income", yen(r.income));
-  set(prefix+"Saving", yen(r.saving));
-  set(prefix+"Expense", yen(r.expense));
+  const limit = budget || 0;
+  const extra = r.income - r.saving;
+  const expense = r.expense;
   
-  // 余额计算逻辑：(预算限额 + 该期间内的外快收入) - 该期间内的储蓄 - 该期间内的消费
-  const left = (budget || 0) + r.income - r.saving - r.expense;
+  // 结余 = 预算额度 + 额外收支 - 实际消费
+  const left = limit + extra - expense;
+  
+  set(prefix+"Limit", yen(limit));
+  set(prefix+"Extra", (extra >= 0 ? "+" : "") + yen(extra));
+  set(prefix+"Expense", yen(expense));
   set(prefix+"Left", yen(left));
   
   // 颜色提示
   const leftEl = document.getElementById(prefix+"Left");
+  const extraEl = document.getElementById(prefix+"Extra");
+  
   if (leftEl) {
-    leftEl.style.color = left < 0 ? 'var(--danger)' : (left < (budget * 0.1) ? 'var(--warning)' : 'var(--success)');
+    leftEl.style.color = left < 0 ? 'var(--danger)' : 'var(--success)';
+  }
+  if (extraEl) {
+    extraEl.style.color = extra < 0 ? 'var(--danger)' : (extra > 0 ? 'var(--success)' : 'var(--text-muted)');
   }
 }
 function sum(list){ return list.reduce((s,x)=>s+Number(x.amount||0),0); }

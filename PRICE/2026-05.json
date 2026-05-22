@@ -1,301 +1,164 @@
 {
   "incomes": [
     {
-      "id": "5d956b89-68b4-463d-ad6f-f13bc104d55b",
+      "id": "0267134b-0d48-4ad5-9f63-86ac00adf6bd",
       "name": "男方工资",
-      "amount": 380000
+      "amount": 350000
     },
     {
-      "id": "10347199-e5a6-479c-adb2-3a7f1e6ce31b",
+      "id": "9371f6d6-fda6-4af8-b86f-79cbde9327e5",
       "name": "女方工资",
       "amount": 400000
     }
   ],
   "pools": [
     {
-      "id": "d7b56edb-b99d-4e79-a389-6acb9360ca78",
+      "id": "a46a5b5a-5e39-410d-8c16-9f5614e66e74",
       "name": "第一层：共同生活",
       "type": "common",
       "amount": 350000
     },
     {
-      "id": "46ea5b39-c942-40fb-bd4e-36ec6856851b",
+      "id": "ecfe426f-95bf-4be5-bb26-88c95b40ae7d",
       "name": "第二层：个人生活",
       "type": "personal",
-      "amount": 170000
+      "amount": 150000
     },
     {
-      "id": "2e6b71eb-4ea2-458c-8442-51e50f14a6ce",
+      "id": "4f43420a-e16f-4e16-8549-5f1031851809",
       "name": "第三层：家庭缓冲",
       "type": "saving",
-      "amount": 130000
+      "amount": 100000
     },
     {
-      "id": "84cc3d52-f69f-4af0-a3a9-7ef78633ec0b",
+      "id": "ffdfcd48-e1f8-4425-a2fc-103c59eafff8",
       "name": "第四层：长期存钱",
       "type": "saving",
-      "amount": 130000
+      "amount": 150000
     }
   ],
   "limits": [
     {
-      "id": "3ce3c6f9-6502-45ca-8ef0-95c30538d776",
-      "name": "餐饮费",
-      "cycle": "meal",
-      "amount": 50000,
-      "dayType": "weekday",
-      "category": "饮食类"
-    },
-    {
-      "id": "f68f5682-4868-4b7a-a0ee-28c829de152d",
-      "name": "每月自由消费",
+      "id": "8d8b1f1e-2e39-4480-8ec4-b678c5aacbbd",
+      "name": "月度饮食",
       "cycle": "month",
       "amount": 60000,
       "dayType": "all",
-      "category": "其他"
+      "category": "饮食类"
+    },
+    {
+      "id": "69120fb7-b6ce-4d92-bd05-62a18a16fceb",
+      "name": "月度自由",
+      "cycle": "month",
+      "amount": 45000,
+      "dayType": "all",
+      "category": "自由类"
     }
   ],
   "fixed": [
     {
-      "id": "ceef91b8-f644-4969-aa5b-6ea67e70a462",
+      "id": "976a2b38-a325-4d83-937b-2193ab0db6c6",
       "name": "男方手机",
       "owner": "男方",
       "amount": 4000,
       "status": "保留"
     },
     {
-      "id": "727cc1db-83a6-4b25-9f4b-b07696432ed1",
+      "id": "ec820b5b-6b39-4981-9569-a94b9b7c6f01",
       "name": "男方ChatGPT",
       "owner": "男方",
       "amount": 3000,
       "status": "保留"
     },
     {
-      "id": "ff536216-d1bc-4540-b8dd-63e51601a7b3",
-      "name": "Netflix",
+      "id": "90a79367-0155-4cae-903d-9cc32c107537",
+      "name": "彩票",
       "owner": "男方",
-      "amount": 600,
+      "amount": 1200,
+      "status": "考虑取消"
+    },
+    {
+      "id": "b1f11f7a-15c1-4b1d-89cc-ebcaabcbd2df",
+      "name": "Amazon会员",
+      "owner": "男方",
+      "amount": 500,
       "status": "检查"
     },
     {
-      "id": "9dccde6f-8e6f-44c1-a5c4-4cfd71dcae79",
+      "id": "a4ba036f-53da-4062-9db7-f9bd5a081e9d",
+      "name": "Netflix",
+      "owner": "男方",
+      "amount": 500,
+      "status": "检查"
+    },
+    {
+      "id": "ee7de987-695b-4559-8165-0372e434c0a5",
       "name": "女方手机",
       "owner": "女方",
-      "amount": 5000,
+      "amount": 4000,
       "status": "保留"
     },
     {
-      "id": "95e7f08e-88c4-4636-b33d-977cfdc3c3db",
+      "id": "7b87df2a-2c2b-4587-bada-0f8a2d5d6107",
       "name": "女方ChatGPT",
       "owner": "女方",
       "amount": 3000,
-      "status": "保留"
-    },
-    {
-      "id": "9fd353df-08f9-48c4-b308-a7c566e03367",
-      "name": "网络",
-      "owner": "共同",
-      "amount": 4940,
       "status": "保留"
     }
   ],
   "logs": [
     {
-      "id": "ef7871ca-80df-4f5c-824c-077df2720732",
-      "date": "2026-05-17",
-      "type": "expense",
-      "person": "女方",
-      "category": "购物类",
-      "note": "亚马逊：隔音垫",
-      "amount": 8586
-    },
-    {
-      "id": "a1400a8b-031b-4c4e-9be4-93745029b8d0",
-      "date": "2026-05-18",
-      "type": "expense",
-      "person": "女方",
-      "category": "日常类",
-      "note": "药妆店：痒痒药，牙刷",
-      "amount": 1216
-    },
-    {
-      "id": "7777947b-de18-4009-a4a6-be31cc0291cb",
-      "date": "2026-05-18",
-      "type": "expense",
-      "person": "男方",
-      "category": "饮食类",
-      "note": "便利店：大瓶水",
-      "amount": 117
-    },
-    {
-      "id": "614ab3e3-bd19-4724-872e-8f244800b309",
-      "date": "2026-05-18",
+      "id": "e1420c11-d84b-4b9e-bfc8-8648bf2b764e",
+      "date": "2026-05-15",
       "type": "expense",
       "person": "共同",
       "category": "饮食类",
-      "note": "牛头店：买菜",
-      "amount": 3744
+      "note": "晚餐",
+      "amount": 120
     },
     {
-      "id": "256c38fc-d9fb-4e25-8214-0cbb35beeac8",
-      "date": "2026-05-17",
-      "type": "expense",
-      "person": "女方",
-      "category": "饮食类",
-      "note": "交通代：御徒町駅➡東あずま駅",
-      "amount": 356
-    },
-    {
-      "id": "10fca2e3-deaa-4b72-af99-50573b0b147e",
-      "date": "2026-05-17",
+      "id": "1fec4c6e-3d13-4323-acdd-902de6b13a71",
+      "date": "2026-05-18",
       "type": "expense",
       "person": "男方",
-      "category": "交通类",
-      "note": "交通代：御徒町駅➡東あずま駅",
-      "amount": 155
-    },
-    {
-      "id": "62e6ad87-5828-46ab-8d92-cd77ddd7bb6c",
-      "date": "2026-05-17",
-      "type": "expense",
-      "person": "女方",
-      "category": "娱乐类",
-      "note": "宝可梦：抽卡片",
-      "amount": 500
-    },
-    {
-      "id": "63f6b778-ef5d-49e4-8d0f-65a28589ff3d",
-      "date": "2026-05-17",
-      "type": "expense",
-      "person": "男方",
-      "category": "其他",
-      "note": "海贼王：上野ヨドバシ散包×10",
-      "amount": 2200
-    },
-    {
-      "id": "24de79b3-7d1d-4c31-bd7a-122924e111c0",
-      "date": "2026-05-17",
-      "type": "expense",
-      "person": "女方",
-      "category": "饮食类",
-      "note": "水果零食：上野（芒果，草莓，馒头，等等）",
-      "amount": 4500
-    },
-    {
-      "id": "632c7e48-e8c3-4cde-a0de-55ace23dfd74",
-      "date": "2026-05-17",
-      "type": "expense",
-      "person": "女方",
-      "category": "饮食类",
-      "note": "便利店：大瓶水",
-      "amount": 108
-    },
-    {
-      "id": "abe41776-9afc-4d9b-ac39-f08f5505aa59",
-      "date": "2026-05-17",
-      "type": "expense",
-      "person": "共同",
-      "category": "饮食类",
-      "note": "午餐：牛魔王（拉面×２，干锅鸡，可乐）",
-      "amount": 5760
-    },
-    {
-      "id": "31bab9a4-602b-4b86-97bb-736be26f1976",
-      "date": "2026-05-17",
-      "type": "expense",
-      "person": "女方",
-      "category": "交通类",
-      "note": "交通代：東あずま駅➡御徒町駅",
-      "amount": 356
-    },
-    {
-      "id": "5a1cb4cb-5606-42f0-aae5-44cd69dd9422",
-      "date": "2026-05-17",
-      "type": "expense",
-      "person": "男方",
-      "category": "交通类",
-      "note": "交通代：錦糸町駅➡御徒町駅",
-      "amount": 155
-    },
-    {
-      "id": "3912cce3-35e7-47c1-b0a2-7bd40b5c63c5",
-      "date": "2026-05-17",
-      "type": "expense",
-      "person": "男方",
-      "category": "其他",
-      "note": "宝可梦：錦糸町ヨドバシ垃圾袋×２",
-      "amount": 11000
-    },
-    {
-      "id": "c24ed574-a35f-4892-8694-4b0d93736576",
-      "date": "2026-05-17",
-      "type": "expense",
-      "person": "男方",
-      "category": "交通类",
-      "amount": 341,
-      "note": "交通代：蒲田駅➡錦糸町駅"
-    },
-    {
-      "id": "e15ce243-a578-4342-99e7-b5ce3a2e1a68",
-      "date": "2026-05-17",
-      "type": "expense",
-      "person": "男方",
-      "category": "饮食类",
-      "amount": 127,
-      "note": "便利店：小瓶水"
-    },
-    {
-      "id": "ca2a9301-8b15-40e0-ab97-65e5819ec436",
-      "date": "2026-05-17",
-      "type": "expense",
-      "person": "男方",
-      "category": "饮食类",
-      "amount": 680,
-      "note": "朝食：蒲田喫茶店"
-    },
-    {
-      "id": "04192239-485a-4dd3-a3ef-f6f712779246",
-      "date": "2026-05-17",
-      "type": "expense",
-      "person": "男方",
-      "category": "交通类",
-      "amount": 341,
-      "note": "交通代：東あずま駅➡蒲田駅"
+      "category": "自由类",
+      "note": "购买图书",
+      "amount": 350
     }
   ],
   "warnings": [
     {
-      "id": "2ce65ce1-0a02-401b-92fd-7b1ce17572d3",
+      "id": "990ce832-7d2a-458b-97d6-c9e0a4c5dbc4",
       "text": "今天所有花销必须先记录，再付款。",
       "priority": "high",
       "done": false
     },
     {
-      "id": "07a0767a-4860-4fea-ae1d-6baa78cf592f",
+      "id": "d2e4dd4a-acd6-496b-b0a7-2833df6d28ee",
       "text": "每一餐都不能超过限定额度。",
       "priority": "high",
       "done": false
     },
     {
-      "id": "5b124dea-31bb-448c-be79-b981a9b69b2c",
+      "id": "453ef164-08ed-4c87-9251-70c1cf17a746",
       "text": "便利店、咖啡、外卖属于最容易失控的小额消费。",
       "priority": "high",
       "done": false
     },
     {
-      "id": "6b8bba11-325c-4d86-b622-4312e159e3dd",
+      "id": "bc3c7086-c37d-4139-803a-18fddc6091b4",
       "text": "个人账户原则上不追加，花完就停止。",
       "priority": "high",
       "done": false
     },
     {
-      "id": "ac854fcf-8cf4-45d9-94cc-07448c4cdfeb",
+      "id": "5c7eedee-ba8b-4b49-9e3c-e7311651661a",
       "text": "购物前等待10分钟，确认是否真的必要。",
       "priority": "mid",
       "done": false
     },
     {
-      "id": "770029ba-6f43-4c8e-8ad0-288095912381",
+      "id": "004e87c4-f2a0-46dc-af55-53877c86d5b8",
       "text": "今天是否珍惜了每一分钱？",
       "priority": "mid",
       "done": false

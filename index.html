@@ -60,8 +60,8 @@
           <strong id="sumSaving">¥0</strong>
         </div>
         <div class="summary-card danger" onclick="showSection('records')" style="cursor: pointer;">
-          <span>今日剩余可用</span>
-          <strong id="sumTodayLeft">¥0</strong>
+          <span>当月剩余可用</span>
+          <strong id="sumMonthLeft">¥0</strong>
         </div>
       </div>
 
@@ -70,12 +70,12 @@
           <h2>📅 消费统计</h2>
           <table class="simple-table">
             <thead>
-              <tr><th>周期</th><th>收入</th><th>储蓄</th><th>消费</th><th>余额</th></tr>
+              <tr><th>周期</th><th>预算额度</th><th>额外收支</th><th>实际消费</th><th>周期结余</th></tr>
             </thead>
             <tbody>
-              <tr><td>今日</td><td id="dIncome">¥0</td><td id="dSaving">¥0</td><td id="dExpense">¥0</td><td id="dLeft">¥0</td></tr>
-              <tr><td>本周</td><td id="wIncome">¥0</td><td id="wSaving">¥0</td><td id="wExpense">¥0</td><td id="wLeft">¥0</td></tr>
-              <tr><td>本月</td><td id="mIncome">¥0</td><td id="mSaving">¥0</td><td id="mExpense">¥0</td><td id="mLeft">¥0</td></tr>
+              <tr><td>今日</td><td id="dLimit">¥0</td><td id="dExtra">¥0</td><td id="dExpense">¥0</td><td id="dLeft">¥0</td></tr>
+              <tr><td>本周</td><td id="wLimit">¥0</td><td id="wExtra">¥0</td><td id="wExpense">¥0</td><td id="wLeft">¥0</td></tr>
+              <tr><td>本月</td><td id="mLimit">¥0</td><td id="mExtra">¥0</td><td id="mExpense">¥0</td><td id="mLeft">¥0</td></tr>
             </tbody>
           </table>
         </div>
@@ -140,7 +140,7 @@
           <span>限额名称</span>
           <span>适用时间</span>
           <span>所属分类</span>
-          <span>每日金额</span>
+          <span>每月金额</span>
           <span>操作</span>
         </div>
         <div id="limitList" class="rows"></div>
